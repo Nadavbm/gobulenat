@@ -4,11 +4,11 @@ services:
   web:
     build: '.'
     environment: 
-      - "BULENAT_USER=bulenat"
-      - "BULENAT_PASS=bulenat1234"
-      - "BULENAT_DB=gobulenat"
-      - "BULENAT_PORT=5432"
-      - "BULENAT_HOST=pgsql"
+      - "DATABASE_USER=bulenat"
+      - "DATABASE_PASS=bulenat1234"
+      - "DATABASE_DB=gobulenat"
+      - "DATABASE_PORT=5432"
+      - "DATABASE_HOST=pgsql"
   pgsql:
     image: 'postgres:11'
     ports:

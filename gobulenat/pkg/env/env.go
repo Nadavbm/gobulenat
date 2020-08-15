@@ -5,6 +5,13 @@ import (
 	"strconv"
 )
 
+// db connection variables
+var DatabaseUser = GetEnv("DATABASE_USER")
+var DatabasePass = GetEnv("DATABASE_PASS")
+var DatabaseDB = GetEnv("DATABASE_DB")
+var DatabaseHost = GetEnv("DATABASE_HOST")
+var DatabasePort = GetEnvInt("DATABASE_PORT")
+
 func GetEnv(key string) string {
 	value := os.Getenv(key)
 	if value != "" {
