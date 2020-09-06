@@ -6,14 +6,14 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/nadavbm/gobulenat/gobulenat/pkg/env"
-	"github.com/nadavbm/gobulenat/gobulenat/pkg/logger"
+	"github.com/nadavbm/gobulenat/pkg/env"
+	"github.com/nadavbm/gobulenat/pkg/logger"
 )
 
 var db *sql.DB
 var err error
 
-func InitDB(logger *logger.Logger) error {
+func InitDB(logger logger.Logger) error {
 	conn := fmt.Sprintf("postgres://%s:%s@%s:%v/%s?sslmode=disable", env.DatabaseUser, env.DatabasePass, env.DatabaseHost, env.DatabasePort, env.DatabaseDB)
 	fmt.Println(conn)
 	db, err = sql.Open("postgres", conn)
@@ -29,10 +29,7 @@ func InitDB(logger *logger.Logger) error {
 		return err
 	}
 	logger.Info("connected to database: " + env.DatabaseDB + "on host:" + env.DatabaseHost)
-	return nil
-}
 
-func RunMigrations(logger *logger.Logger) error {
 	_, err = db.Exec(migration)
 	if err != nil {
 		//logger.Info("could not run db migrations")
