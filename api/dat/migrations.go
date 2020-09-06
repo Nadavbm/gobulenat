@@ -1,4 +1,4 @@
-package datbass
+package dat
 
 var migration string = `
 CREATE TABLE users (
