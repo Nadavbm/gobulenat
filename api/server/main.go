@@ -26,7 +26,12 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", homePage)
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+	r.HandleFunc("/signup", signupPage)
+	r.HandleFunc("/login", loginPage)
+	r.HandleFunc("/about", aboutPage)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
+
+	http.Handle("/", r)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -44,7 +49,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {
-	err := tpl.ExecuteTemplate(w, "home.html", nil)
+	err := tpl.ExecuteTemplate(w, "login.html", nil)
 	if err != nil {
 		errors.Wrap(err, "could not execute home template")
 	}
@@ -52,8 +57,8 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func profilePage(w http.ResponseWriter, r *http.Request) {
-	err := tpl.ExecuteTemplate(w, "home.html", nil)
+func aboutPage(w http.ResponseWriter, r *http.Request) {
+	err := tpl.ExecuteTemplate(w, "about.html", nil)
 	if err != nil {
 		errors.Wrap(err, "could not execute home template")
 	}
@@ -62,7 +67,7 @@ func profilePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func signupPage(w http.ResponseWriter, r *http.Request) {
-	err := tpl.ExecuteTemplate(w, "home.html", nil)
+	err := tpl.ExecuteTemplate(w, "signup.html", nil)
 	if err != nil {
 		errors.Wrap(err, "could not execute home template")
 	}
