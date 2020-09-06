@@ -18,7 +18,7 @@ var db *sql.DB
 var tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/templates/*html"))
 
 func init() {
-	logger := logger.Logger{}
+	logger := logger.DevLogger()
 	dat.InitDB(logger)
 }
 

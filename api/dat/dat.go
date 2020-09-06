@@ -13,7 +13,7 @@ import (
 var db *sql.DB
 var err error
 
-func InitDB(logger logger.Logger) error {
+func InitDB(logger *logger.Logger) error {
 	conn := fmt.Sprintf("postgres://%s:%s@%s:%v/%s?sslmode=disable", env.DatabaseUser, env.DatabasePass, env.DatabaseHost, env.DatabasePort, env.DatabaseDB)
 	fmt.Println(conn)
 	db, err = sql.Open("postgres", conn)
@@ -25,14 +25,14 @@ func InitDB(logger logger.Logger) error {
 
 	err = db.Ping()
 	if err != nil {
-		//logger.Panic("could not ping database")
+		logger.Panic("could not ping database")
 		return err
 	}
 	logger.Info("connected to database: " + env.DatabaseDB + "on host:" + env.DatabaseHost)
 
 	_, err = db.Exec(migration)
 	if err != nil {
-		//logger.Info("could not run db migrations")
+		logger.Info("could not run db migrations")
 		return err
 	}
 	logger.Info("db migrations completed successfully")

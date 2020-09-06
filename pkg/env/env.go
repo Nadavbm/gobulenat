@@ -7,7 +7,7 @@ import (
 
 // db connection variables
 var DatabaseUser = GetEnv("DATABASE_USER")
-var DatabasePass = GetEnv("DATABASE_PASS")
+var DatabasePass = GetEnv("DATABASE_PASSWORD")
 var DatabaseDB = GetEnv("DATABASE_DB")
 var DatabaseHost = GetEnv("DATABASE_HOST")
 var DatabasePort = GetEnvInt("DATABASE_PORT")
