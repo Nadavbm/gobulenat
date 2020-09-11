@@ -52,8 +52,11 @@ will just say hello to user after login (kind of a home page)
 
 docker-compose file will launch web and posgresql
 
+### roadmap
 
-### last words (not mine)
+- set signup form and write to database `/signup`
 
-keep it stupid and simple, ciao
+- set auth methhod to read email\password from database `/`
+
+- say hello to user from home page `/home`
 

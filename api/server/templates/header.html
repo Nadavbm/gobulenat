@@ -2,17 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link href="/app/static/style.css" type="text/css" rel="stylesheet">
+    <link href="/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/style.css" type="text/css" rel="stylesheet">
     <title>Go-Bulenat!</title>
 </head>
 
+<body>
 <header>
-    <div>GoBuLeNaT</div>
-    <div>
-        <a href="/">home</a><br>
-        <a href="/about">about</a><br>
-        <a href="/signup">signup</a><br>
+    <div class="container">
+        <div id="brand">
+            <h2>GoBuLeNaT</h2>
+        </div>
+
+        <nav>
+            <ul>
+                <li><a href="/home">home</a></li>
+                <li><a href="/about">about</a></li>
+                <li><a href="/signup">signup</a></li>
+                <li><a href="/">login</a></li>
+                <li><a href="/logout">logout</a></li>
+            </ul>
+        </nav>
     </div>
 </header>
-
 {{end}}

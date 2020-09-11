@@ -25,13 +25,13 @@ func NewServer(logger *logger.Logger) *Server {
 func (s *Server) Run() error {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", HomePage)
+	r.HandleFunc("/home", HomePage)
 	r.HandleFunc("/signup", SignupHandler)
-	//r.HandleFunc("/login", LoginHandler)
+	r.HandleFunc("/", LoginHandler)
 	r.HandleFunc("/about", AboutPage)
-	//r.HandleFunc("/logout", LogoutHandler)
+	r.HandleFunc("/logout", LogoutHandler)
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("./static"))))
+	r.PathPrefix("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/").Handler(http.StripPrefix("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/", http.FileServer(http.Dir("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/"))))
 
 	http.Handle("/", r)
 

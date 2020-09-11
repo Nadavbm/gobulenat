@@ -1,9 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 )
@@ -23,34 +23,38 @@ var (
 	store = sessions.NewCookieStore(key)
 )
 
-func SetSecret(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
-
-	// Check if user is authenticated
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	// Print secret message
-	fmt.Fprintln(w, "The cake is a lie!")
-}
+var cookieHandler = securecookie.New(
+	securecookie.GenerateRandomKey(64),
+	securecookie.GenerateRandomKey(32))
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-
 	session, _ := store.Get(r, "cookie-name")
 
 	// Authentication goes here
 	// ...
 
 	// Set user as authenticated
-	session.Values["authenticated"] = true
-	session.Save(r, w)
 
 	err := tpl.ExecuteTemplate(w, "login.html", nil)
 	if err != nil {
 		errors.Wrap(err, "could not execute login html template")
 	}
+
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	if email != "" && password != "" {
+		// .. check credentials ..
+
+		session.Values["authenticated"] = true
+		session.Save(r, w)
+
+		setSession(email, w)
+		http.Redirect(w, r, "/home", 302)
+	}
+
+	clearSession(w)
+	http.Redirect(w, r, "/", 302)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,4 +63,30 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Revoke users authentication
 	session.Values["authenticated"] = false
 	session.Save(r, w)
+	clearSession(w)
+	http.Redirect(w, r, "/", 302)
+}
+
+func setSession(userName string, response http.ResponseWriter) {
+	value := map[string]string{
+		"name": userName,
+	}
+	if encoded, err := cookieHandler.Encode("session", value); err == nil {
+		cookie := &http.Cookie{
+			Name:  "session",
+			Value: encoded,
+			Path:  "/",
+		}
+		http.SetCookie(response, cookie)
+	}
+}
+
+func clearSession(response http.ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:   "session",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	}
+	http.SetCookie(response, cookie)
 }
