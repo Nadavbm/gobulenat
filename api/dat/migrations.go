@@ -26,7 +26,9 @@ CREATE TABLE users (
 	first_name char(50) not null, 
 	last_name char(50) not null, 
 	email text not null, 
-	password text not null, 
+	password text not null,
+	auth_method	text nol null,
+	token	text,
 	session bool
 );
 
