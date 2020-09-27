@@ -33,7 +33,7 @@ CREATE TABLE users (
 	id serial primary key not null, 
 	first_name char(50) not null, 
 	last_name char(50) not null, 
-	email text not null, 
+	email text not null UNIQUE, 
 	password text not null,
 	auth_method	text,
 	token	text,
