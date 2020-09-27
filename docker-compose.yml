@@ -21,9 +21,4 @@ services:
       - "POSTGRES_USER=postgres"
       - "POSTGRES_PASSWORD=bulenat1234"
       - "POSTGRES_DB=gobulenat"
-    volumes:
-      - data:/var/lib/postgresql/data
     restart: unless-stopped
-
-volumes:
-  data:
