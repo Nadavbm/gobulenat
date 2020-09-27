@@ -54,9 +54,18 @@ docker-compose file will launch web and posgresql
 
 ### roadmap
 
-- set signup form and write to database `/signup`
+- set signup form and write to database `/signup` 
+
+- write signup forms to database
+
+- login form on `/` and redirect from all pages unless have a token
 
 - set auth methhod to read email\password from database `/`
 
-- say hello to user from home page `/home`
+- say hello to user from home page `/profile/${user}`
 
+- set style css for header (done)
+
+### isues
+
+solve db migration problem
