@@ -5,7 +5,6 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
-	"github.com/pkg/errors"
 )
 
 type User struct {
@@ -31,36 +30,6 @@ var (
 var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
-
-	// Authentication goes here
-	// ...
-
-	// Set user as authenticated
-
-	err := tpl.ExecuteTemplate(w, "login.html", nil)
-	if err != nil {
-		errors.Wrap(err, "could not execute login html template")
-	}
-
-	email := r.FormValue("email")
-	password := r.FormValue("password")
-
-	if email != "" && password != "" {
-		// .. check credentials ..
-
-		session.Values["authenticated"] = true
-		session.Save(r, w)
-
-		setSession(email, w)
-		http.Redirect(w, r, "/home", 302)
-	}
-
-	clearSession(w)
-	http.Redirect(w, r, "/", 302)
-}
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "cookie-name")
