@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -10,12 +11,15 @@ import (
 	"github.com/nadavbm/gobulenat/pkg/logger"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/templates/*html"))
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	logger := logger.DevLogger()
+
+	l := NewLogin()
 
 	session, _ := store.Get(r, "cookie-name")
 
@@ -30,7 +34,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		fmt.Println("Email and Pass:", email, password)
+		l = &Login{
+			Email:    email,
+			Password: password,
+		}
+
 		if email == "" && password == "" {
 			http.Redirect(w, r, "/", 302)
 			logger.Info("no email or password provided. enter your credentials please.")
@@ -46,15 +54,37 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Authentication goes here
-		// ...
+		query := fmt.Sprintf("SELECT email, password FROM users WHERE email = '%s'", email)
+		rowss, err := db.Query(query)
+		if err != nil {
+			http.Redirect(w, r, "/", 302)
+			logger.Info("could not get login credentials from database", zap.Error(err))
+			return
+		}
 
-		// Set user as authenticated
-		session.Values["authenticated"] = true
-		session.Save(r, w)
+		//expiresAt := time.Now().Add(time.Minute * 100000).Unix()
+		login := new(Login)
+		for rowss.Next() {
+			err := rowss.Scan(&login.Email, &login.Password)
+			if err != nil {
+				logger.Info("could not scan users table")
+			}
+			fmt.Println("from database:", login.Email, login.Password, "from form:", l.Email, l.Password)
+		}
 
-		setSession(email, w)
-		http.Redirect(w, r, "/profile/{id}", 302)
+		err = bcrypt.CompareHashAndPassword([]byte(l.Password), []byte(login.Password))
+		if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+			logger.Info("incorrect password", zap.String("for email:", l.Email))
+			http.Redirect(w, r, "/", 302)
+			return
+		} else {
+			// Set user as authenticated
+			session.Values["authenticated"] = true
+			session.Save(r, w)
+
+			setSession(email, w)
+			http.Redirect(w, r, "/profile/{id}", 302)
+		}
 	}
 
 	err = tpl.ExecuteTemplate(w, "login.html", nil)
@@ -84,6 +114,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/signup", 302)
 			return
 		}
+
 		submitForm := fmt.Sprintf("email: %s,\t Name: %s %s, \nPassword: %s, \tConfim:%s", email, fname, lname, password, confirm)
 		logger.Info("form submitted:", zap.String("details - ", submitForm))
 		u = &User{
@@ -92,6 +123,14 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 			Email:     email,
 			Password:  password,
 		}
+
+		pass, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		if err != nil {
+			logger.Info("ERROR:", zap.Error(err))
+			json.NewEncoder(w).Encode(err)
+		}
+		u.Password = string(pass)
+		fmt.Println("bcrypt password:", pass)
 
 		conn := dat.GetDBConnString()
 		db, err := sql.Open("postgres", conn)
@@ -117,19 +156,3 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		errors.Wrap(err, "could not execute signup html template")
 	}
 }
-
-/*
-func HomePage(w http.ResponseWriter, r *http.Request) {
-	err := tpl.ExecuteTemplate(w, "home.html", nil)
-	if err != nil {
-		errors.Wrap(err, "could not execute home html template")
-	}
-}
-
-func AboutPage(w http.ResponseWriter, r *http.Request) {
-	err := tpl.ExecuteTemplate(w, "about.html", nil)
-	if err != nil {
-		errors.Wrap(err, "could not execute about html template")
-	}
-}
-*/

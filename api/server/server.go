@@ -42,11 +42,18 @@ func (s *Server) Run() error {
 	r.HandleFunc("/logout", LogoutHandler)
 
 	/* examples:
-	   router.HandleFunc("/api/user/{id}", middleware.GetUser).Methods("GET", "OPTIONS")
-	   router.HandleFunc("/api/user", middleware.GetAllUser).Methods("GET", "OPTIONS")
-	   router.HandleFunc("/api/newuser", middleware.CreateUser).Methods("POST", "OPTIONS")
-	   router.HandleFunc("/api/user/{id}", middleware.UpdateUser).Methods("PUT", "OPTIONS")
-	   router.HandleFunc("/api/deleteuser/{id}", middleware.DeleteUser).Methods("DELETE", "OPTIONS")
+	   r.HandleFunc("/api/user/{id}", middleware.GetUser).Methods("GET", "OPTIONS")
+	   r.HandleFunc("/api/user", middleware.GetAllUser).Methods("GET", "OPTIONS")
+	   r.HandleFunc("/api/newuser", middleware.CreateUser).Methods("POST", "OPTIONS")
+	   r.HandleFunc("/api/user/{id}", middleware.UpdateUser).Methods("PUT", "OPTIONS")
+	   r.HandleFunc("/api/deleteuser/{id}", middleware.DeleteUser).Methods("DELETE", "OPTIONS")
+
+	   	s := r.PathPrefix("/auth").Subrouter()
+		s.Use(auth.JwtVerify)
+		s.HandleFunc("/user", controllers.FetchUsers).Methods("GET")
+		s.HandleFunc("/user/{id}", controllers.GetUser).Methods("GET")
+		s.HandleFunc("/user/{id}", controllers.UpdateUser).Methods("PUT")
+		s.HandleFunc("/user/{id}", controllers.DeleteUser).Methods("DELETE")
 	*/
 
 	r.PathPrefix("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/").Handler(http.StripPrefix("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/", http.FileServer(http.Dir("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/"))))

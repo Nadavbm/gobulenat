@@ -16,9 +16,19 @@ type User struct {
 	AuthMethod string `json:"auth_method"`
 }
 
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func NewUser() *User {
 	user := &User{}
 	return user
+}
+
+func NewLogin() *Login {
+	login := &Login{}
+	return login
 }
 
 var (
