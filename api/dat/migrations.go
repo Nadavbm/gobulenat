@@ -1,24 +1,32 @@
 package dat
 
 var migration string = `
-DP $$ DECLARE
+
+DO $$ DECLARE
 BEGIN
 --
+-- stage: if exist do not create migrations table
 --
-IF EXIST(SELECT 1 FROM pg_tables WHERE tablename = 'migrations') THEN
+IF EXISTS(SELECT * FROM pg_tables WHERE tablename = 'migrations') THEN
 	RAISE NOTICE 'migrations table exist, skipping...';
 	RETURN;
 END IF;
 
+--
+-- stage: migraitons table creation
+--
 CREATE TABLE migrations (
-	name text PRIMARY_KEY,
-	time	TIMESTAMP DEFAULT NOW()
+	name text PRIMARY KEY,
+	time TIMESTAMP DEFAULT NOW()
 );
 
-END $$
+END $$;
 
+--
+-- stage: users table creation unless exist
+--
 DO $$ BEGIN
-IF EXIST(SELECT 1 FROM migrations WHERE name = 'users') THEN RETURN;
+IF EXISTS(SELECT * FROM migrations WHERE name = 'users') THEN RETURN;
 END IF;
 
 CREATE TABLE users (
@@ -27,11 +35,11 @@ CREATE TABLE users (
 	last_name char(50) not null, 
 	email text not null, 
 	password text not null,
-	auth_method	text nol null,
+	auth_method	text,
 	token	text,
 	session bool
 );
 
 INSERT INTO migrations (name) VALUES ('users');
-END $$
+END $$;
 `
