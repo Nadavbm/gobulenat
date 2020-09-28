@@ -1,14 +1,12 @@
 ### gobulenat
 
-go bulenat is a login system I create during studies
+go bulenat is a login system
 
-lets see where it goes.. this readme file will be for planning
+environment description:
 
-login system checklist:
+docker-compose two instances: web app (gobulenat) and database (postgresql)
 
-this app will be composed from a db and a web app.
-
-webapp written in go and database will be postgresql
+web app written in go and serves html templates (go package)
 
 #### database
 
@@ -18,45 +16,31 @@ id, first_name, last_name, email, password, session, auth_method,
 
 #### web app pages
 
-1. opening page 
+1. login page `/` 
 
-2. signup page
+2. signup page `/signup`
 
-3. login page
+3. logout button (button redirecting to `/`)
 
-4. logout button
-
-4. profile page
-
-###### opening page
-
-intro gobulenat - nothing but redirecting to login or signup pages
+4. profile page `/profile/{id}` (redirecting by user id)
 
 ###### login
 
-form based email and password
+form based email and password (set cookie and authenticated)
 
 ###### signup
 
-first and last name, email and password
+first and last name, email and password (redirecting back to `/`)
 
 ###### logout
 
-will redirect to home page
+will redirect to login page (set no cookie)
 
 ###### profile page
 
-will just say hello to user after login (kind of a home page)
-
-#### specs
-
-docker-compose file will launch web and posgresql
+will just say hello to user after login, using user struct (`fname` and `lname`)
 
 ### roadmap
-
-- set signup form and write to database `/signup` 
-
-- write signup forms to database
 
 - login form on `/` and redirect from all pages unless have a token
 
@@ -64,8 +48,3 @@ docker-compose file will launch web and posgresql
 
 - say hello to user from home page `/profile/${user}`
 
-- set style css for header (done)
-
-### isues
-
-solve db migration problem
