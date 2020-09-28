@@ -19,7 +19,7 @@ var tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/na
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	logger := logger.DevLogger()
 
-	l := NewLogin()
+	u := NewUser()
 
 	session, _ := store.Get(r, "cookie-name")
 
@@ -34,7 +34,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		l = &Login{
+		u = &User{
+			Id:       0,
 			Email:    email,
 			Password: password,
 		}
@@ -54,7 +55,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		query := fmt.Sprintf("SELECT email, password FROM users WHERE email = '%s'", email)
+		query := fmt.Sprintf("SELECT id,email, password FROM users WHERE email = '%s'", email)
 		rowss, err := db.Query(query)
 		if err != nil {
 			http.Redirect(w, r, "/", 302)
@@ -63,28 +64,31 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//expiresAt := time.Now().Add(time.Minute * 100000).Unix()
-		login := new(Login)
+		user := new(User)
 		for rowss.Next() {
-			err := rowss.Scan(&login.Email, &login.Password)
+			err := rowss.Scan(&user.Id, &user.Email, &user.Password)
 			if err != nil {
 				logger.Info("could not scan users table")
 			}
-			fmt.Println("from database:", login.Email, login.Password, "from form:", l.Email, l.Password)
 		}
 
-		err = bcrypt.CompareHashAndPassword([]byte(l.Password), []byte(login.Password))
-		if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-			logger.Info("incorrect password", zap.String("for email:", l.Email))
+		fmt.Println("from database:", user.Email, user.Password, "from form:", u.Email, u.Password)
+
+		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
+		if err != nil || err == bcrypt.ErrMismatchedHashAndPassword {
+			logger.Info("incorrect password", zap.String("for email:", u.Email))
 			http.Redirect(w, r, "/", 302)
 			return
-		} else {
-			// Set user as authenticated
-			session.Values["authenticated"] = true
-			session.Save(r, w)
-
-			setSession(email, w)
-			http.Redirect(w, r, "/profile/{id}", 302)
 		}
+
+		url := fmt.Sprintf("/profile/%d", user.Id)
+		// Set user as authenticated
+		session.Values["authenticated"] = true
+		session.Save(r, w)
+
+		setSession(email, w)
+		http.Redirect(w, r, url, 302)
+
 	}
 
 	err = tpl.ExecuteTemplate(w, "login.html", nil)
@@ -155,4 +159,21 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errors.Wrap(err, "could not execute signup html template")
 	}
+}
+
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	err := tpl.ExecuteTemplate(w, "home.html", nil)
+	if err != nil {
+		errors.Wrap(err, "could not execute home html template")
+	}
+}
+
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "cookie-name")
+
+	// Revoke users authentication
+	session.Values["authenticated"] = false
+	session.Save(r, w)
+	clearSession(w)
+	http.Redirect(w, r, "/", 302)
 }
