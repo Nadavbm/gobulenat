@@ -8,6 +8,7 @@ import (
 )
 
 type User struct {
+	Id         int    `json:"id"`
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	Email      string `json:"email"`
@@ -16,19 +17,9 @@ type User struct {
 	AuthMethod string `json:"auth_method"`
 }
 
-type Login struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func NewUser() *User {
 	user := &User{}
 	return user
-}
-
-func NewLogin() *Login {
-	login := &Login{}
-	return login
 }
 
 var (
@@ -40,16 +31,6 @@ var (
 var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
-
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
-
-	// Revoke users authentication
-	session.Values["authenticated"] = false
-	session.Save(r, w)
-	clearSession(w)
-	http.Redirect(w, r, "/", 302)
-}
 
 func setSession(userName string, response http.ResponseWriter) {
 	value := map[string]string{
