@@ -35,10 +35,9 @@ func init() {
 func (s *Server) Run() error {
 	r := mux.NewRouter()
 
-	//r.HandleFunc("/home", HomePage)
+	r.HandleFunc("/profile/{id}", ProfileHandler).Methods("GET")
 	r.HandleFunc("/signup", SignupHandler).Methods("POST", "GET")
 	r.HandleFunc("/", LoginHandler).Methods("POST", "GET")
-	//r.HandleFunc("/about", AboutPage)
 	r.HandleFunc("/logout", LogoutHandler)
 
 	/* examples:
