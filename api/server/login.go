@@ -14,8 +14,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Session struct {
-	UserID        int
+type UserSession struct {
+	UserId        int
 	Authenticated bool
 }
 
@@ -30,7 +30,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	u := NewUser()
 
-	session, _ := store.Get(r, "bulenat-cookie")
+	// get client session
+	session, err := store.Get(r, "bulenat-cookie")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	conn := dat.GetDBConnString()
 	db, err := sql.Open("postgres", conn)
@@ -50,6 +55,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if email == "" && password == "" {
 			http.Redirect(w, r, "/login", 302)
+			session.AddFlash("please enter your credentials")
 			logger.Info("no email or password provided. enter your credentials please.")
 			return
 		}
@@ -59,7 +65,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		err := rows.Scan(&emailScan)
 		if emailScan == 0 || err == sql.ErrNoRows {
 			http.Redirect(w, r, "/login", 302)
-			logger.Info("ERROR: email was not found in the database. redirecting to login page.", zap.Error(err))
+			session.AddFlash("we can't find your email in the database, please login again")
+			logger.Info("email was not found in the database. redirecting to login page.", zap.Error(err))
 			return
 		}
 
@@ -67,6 +74,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		rowss, err := db.Query(query)
 		if err != nil {
 			http.Redirect(w, r, "/login", 302)
+			session.AddFlash("we lost your credentials - please sign up again")
 			logger.Info("could not get login credentials from database", zap.Error(err))
 			return
 		}
@@ -83,6 +91,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
 		if err != nil || err == bcrypt.ErrMismatchedHashAndPassword {
 			logger.Info("incorrect password", zap.String("for email:", u.Email))
+			session.AddFlash("hi", u.FirstName, "the password was incorrect")
 			http.Redirect(w, r, "/login", 302)
 			return
 		}
@@ -90,8 +99,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		url := fmt.Sprintf("/profile/%d", user.Id)
 
 		// Set user as authenticated
-		session.Values["authenticated"] = true
-		session.Save(r, w)
+		userSession := &UserSession{
+			UserId:        user.Id,
+			Authenticated: true,
+		}
+
+		session.Values["user"] = userSession
+		err = session.Save(r, w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		//setSession(email, w)
 		http.Redirect(w, r, url, 302)
@@ -105,11 +123,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "bulenat-cookie")
+	session, err := store.Get(r, "bulenat-cookie")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// Revoke users authentication
-	session.Values["authenticated"] = false
-	session.Save(r, w)
-	//clearSession(w)
+	session.Values["user"] = UserSession{}
+	session.Options.MaxAge = -1
+
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	http.Redirect(w, r, "/login", 302)
 }

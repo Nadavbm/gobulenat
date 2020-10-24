@@ -34,7 +34,9 @@ func (u *User) CreateUser(l *logger.Logger) *User {
 	return u
 }
 
-func (u *User) GetUser(l *logger.Logger) *User {
+func GetUserById(l *logger.Logger, id int) (*User, error) {
+	u := &User{}
+
 	conn := GetDBConnString()
 	db, err := sql.Open("postgres", conn)
 	if err != nil {
@@ -42,18 +44,20 @@ func (u *User) GetUser(l *logger.Logger) *User {
 	}
 	defer db.Close()
 
-	query := fmt.Sprintf("SELECT * FROM users WHERE id = %d", u.Id)
+	query := fmt.Sprintf("SELECT id,email,first_name,last_name FROM users WHERE id = %d", id)
 	rows, err := db.Query(query)
 	if err != nil {
 		l.Info("could not get id from database", zap.Error(err))
+		return nil, err
 	}
 
 	for rows.Next() {
-		err := rows.Scan(&u.Id, &u.FirstName, &u.LastName)
+		err := rows.Scan(&u.Id, &u.Email, &u.FirstName, &u.LastName)
 		if err != nil {
 			l.Info("could not scan users table")
+			return nil, err
 		}
 	}
-	fmt.Println("user struct:", u)
-	return u
+	fmt.Println("user struct in database:", u)
+	return u, nil
 }

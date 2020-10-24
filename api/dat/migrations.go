@@ -35,9 +35,7 @@ CREATE TABLE users (
 	last_name char(50) not null, 
 	email text not null UNIQUE, 
 	password text not null,
-	authenticated	bool,
-	last_login	timestamp,
-	session text
+	last_login	timestamp
 );
 
 INSERT INTO migrations (name) VALUES ('users');

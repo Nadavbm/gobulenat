@@ -87,7 +87,7 @@ func InitCS(l *logger.Logger) {
 		HttpOnly: true,
 	}
 
-	gob.Register(User{})
+	gob.Register(UserSession{})
 
 	l.Info("initialize html tempalte")
 	tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/templates/*html"))
