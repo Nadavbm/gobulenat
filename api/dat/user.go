@@ -58,6 +58,6 @@ func GetUserById(l *logger.Logger, id int) (*User, error) {
 			return nil, err
 		}
 	}
-	fmt.Println("user struct in database:", u)
+
 	return u, nil
 }

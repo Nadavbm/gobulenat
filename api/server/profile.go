@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -33,7 +34,28 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
+	l := logger.DevLogger()
 
+	session, err := store.Get(r, "bulenat-cookie")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	user := getUserSession(session)
+
+	if user.UserId > 0 {
+		u, err := dat.GetUserById(l, user.UserId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		url := fmt.Sprintf("/profile/%d", u.Id)
+
+		//setSession(email, w)
+		http.Redirect(w, r, url, 302)
+	}
+	http.Redirect(w, r, "/login", 302)
 }
 
 func getUserSession(s *sessions.Session) UserSession {

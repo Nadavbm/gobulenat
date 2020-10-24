@@ -58,8 +58,7 @@ func (s *Server) Run() error {
 func CreateApiRouter(l *logger.Logger) (*mux.Router, error) {
 	r := mux.NewRouter()
 
-	//r.HandleFunc("/", RootHandler)
-	//r.Use(HasSession())
+	r.HandleFunc("/", RootHandler).Methods("GET")
 	r.HandleFunc("/login", LoginHandler).Methods("POST", "GET")
 	r.HandleFunc("/logout", LogoutHandler)
 	r.HandleFunc("/profile/{id}", ProfileHandler).Methods("GET")
