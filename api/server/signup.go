@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -63,20 +62,14 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		u.Password = string(pass)
 
-		conn := dat.GetDBConnString()
-		db, err := sql.Open("postgres", conn)
-		if err != nil {
-			logger.Panic("could not open connection to database")
+		user := &dat.User{
+			FirstName: fname,
+			LastName:  lname,
+			Email:     email,
+			Password:  string(pass),
 		}
-		defer db.Close()
 
-		query := fmt.Sprintf("INSERT INTO users(first_name, last_name, email, password) VALUES ('%s', '%s', '%s', '%s');", u.FirstName, u.LastName, u.Email, u.Password)
-		_, err = db.Exec(query)
-		if err != nil {
-			logger.Info("ERROR:", zap.Error(err))
-			logger.Info("could not execute in database:", zap.String("query:", query))
-		}
-		logger.Info("execute in database:", zap.String("query:", query))
+		user.CreateUser(logger)
 
 		http.Redirect(w, r, "/login", 302)
 		return
