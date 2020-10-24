@@ -10,10 +10,10 @@ func main() {
 	l := logger.DevLogger()
 
 	// initialize db connection and db migrations
-	dat.InitDB()
+	dat.InitDB(l)
 
 	// initialize cookie store
-	//server.InitCS()
+	server.InitCS(l)
 
 	l.Info("starting server on port 8081")
 	s := server.NewServer(l, ":8081")

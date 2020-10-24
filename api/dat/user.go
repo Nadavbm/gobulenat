@@ -16,6 +16,11 @@ type User struct {
 	Password  string `db:"password"`
 }
 
+func CreateUser(l *logger.Logger) *User {
+	u := &User{}
+	return u
+}
+
 func GetUser(l *logger.Logger) *User {
 	logger := logger.DevLogger()
 

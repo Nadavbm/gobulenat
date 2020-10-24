@@ -11,8 +11,7 @@ import (
 
 var db *sql.DB
 
-func InitDB() {
-	logger := logger.DevLogger()
+func InitDB(logger *logger.Logger) {
 
 	conn := GetDBConnString()
 	db, err := sql.Open("postgres", conn)

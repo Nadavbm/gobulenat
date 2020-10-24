@@ -17,8 +17,6 @@ import (
 
 var db *sql.DB
 
-var tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/templates/*html"))
-
 type Server struct {
 	Logger     *logger.Logger
 	Mux        *http.ServeMux
@@ -73,10 +71,12 @@ func CreateApiRouter(l *logger.Logger) (*mux.Router, error) {
 	return r, nil
 }
 
-func InitCS() {
+func InitCS(l *logger.Logger) {
+	l.Info("initialize cookie store")
 	authKeyOne := securecookie.GenerateRandomKey(64)
 	encryptionKeyOne := securecookie.GenerateRandomKey(32)
 
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 	store = sessions.NewCookieStore(
 		authKeyOne,
 		encryptionKeyOne,
@@ -88,4 +88,7 @@ func InitCS() {
 	}
 
 	gob.Register(User{})
+
+	l.Info("initialize html tempalte")
+	tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/templates/*html"))
 }

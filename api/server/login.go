@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"text/template"
 
+	"github.com/gorilla/sessions"
 	"github.com/nadavbm/gobulenat/api/dat"
 	"github.com/nadavbm/gobulenat/pkg/logger"
 	"github.com/pkg/errors"
@@ -17,7 +19,11 @@ type Session struct {
 	Authenticated bool
 }
 
-//var store *sessions.CookieStore
+// store will hold all session data
+var store *sessions.CookieStore
+
+// tpl holds all parsed templates
+var tpl *template.Template
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	logger := logger.DevLogger()
