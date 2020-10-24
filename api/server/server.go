@@ -2,16 +2,22 @@ package server
 
 import (
 	"database/sql"
+	"encoding/gob"
 	"net/http"
+	"text/template"
 
 	"github.com/gorilla/mux"
-	"github.com/nadavbm/gobulenat/api/dat"
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 	"github.com/nadavbm/gobulenat/pkg/logger"
+	"go.uber.org/zap"
 
 	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
+
+var tpl = template.Must(template.ParseGlob("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/templates/*html"))
 
 type Server struct {
 	Logger     *logger.Logger
@@ -19,49 +25,67 @@ type Server struct {
 	HTTPServer *http.Server
 }
 
-func NewServer(logger *logger.Logger) *Server {
-	server := &Server{
-		Logger: logger,
+func NewServer(l *logger.Logger, listenAddress string) *Server {
+	s := &Server{
+		Logger: l,
 	}
 
-	server.HTTPServer = &http.Server{}
-	return server
-}
+	r, err := CreateApiRouter(l)
+	if err != nil {
+		l.Error("failed to create mux router")
+		panic(err)
+	}
 
-func init() {
-	dat.InitDB()
+	s.Mux = http.NewServeMux()
+	s.Mux.Handle("/", r)
+
+	s.HTTPServer = &http.Server{
+		Addr: listenAddress,
+	}
+
+	return s
 }
 
 func (s *Server) Run() error {
+	logger := logger.Logger{}
+
+	err := s.HTTPServer.ListenAndServe()
+	if err != nil {
+		logger.Error("cannot run http server - listen and serve", zap.Error(err))
+	}
+
+	return nil
+}
+
+func CreateApiRouter(l *logger.Logger) (*mux.Router, error) {
 	r := mux.NewRouter()
 
+	//r.HandleFunc("/", RootHandler)
+	//r.Use(HasSession())
+	r.HandleFunc("/login", LoginHandler).Methods("POST", "GET")
+	r.HandleFunc("/logout", LogoutHandler)
 	r.HandleFunc("/profile/{id}", ProfileHandler).Methods("GET")
 	r.HandleFunc("/signup", SignupHandler).Methods("POST", "GET")
-	r.HandleFunc("/", LoginHandler).Methods("POST", "GET")
-	r.HandleFunc("/logout", LogoutHandler)
-
-	/* examples:
-	   r.HandleFunc("/api/user/{id}", middleware.GetUser).Methods("GET", "OPTIONS")
-	   r.HandleFunc("/api/user", middleware.GetAllUser).Methods("GET", "OPTIONS")
-	   r.HandleFunc("/api/newuser", middleware.CreateUser).Methods("POST", "OPTIONS")
-	   r.HandleFunc("/api/user/{id}", middleware.UpdateUser).Methods("PUT", "OPTIONS")
-	   r.HandleFunc("/api/deleteuser/{id}", middleware.DeleteUser).Methods("DELETE", "OPTIONS")
-
-	   	s := r.PathPrefix("/auth").Subrouter()
-		s.Use(auth.JwtVerify)
-		s.HandleFunc("/user", controllers.FetchUsers).Methods("GET")
-		s.HandleFunc("/user/{id}", controllers.GetUser).Methods("GET")
-		s.HandleFunc("/user/{id}", controllers.UpdateUser).Methods("PUT")
-		s.HandleFunc("/user/{id}", controllers.DeleteUser).Methods("DELETE")
-	*/
 
 	r.PathPrefix("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/").Handler(http.StripPrefix("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/", http.FileServer(http.Dir("/home/rodriguez/go/src/github.com/nadavbm/gobulenat/api/server/static/"))))
 
 	http.Handle("/", r)
+	return r, nil
+}
 
-	err := http.ListenAndServe(":8080", nil)
-	if err != nil {
-		panic(err)
+func InitCS() {
+	authKeyOne := securecookie.GenerateRandomKey(64)
+	encryptionKeyOne := securecookie.GenerateRandomKey(32)
+
+	store = sessions.NewCookieStore(
+		authKeyOne,
+		encryptionKeyOne,
+	)
+
+	store.Options = &sessions.Options{
+		MaxAge:   60 * 15,
+		HttpOnly: true,
 	}
-	return err
+
+	gob.Register(User{})
 }
